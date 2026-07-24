@@ -55,7 +55,7 @@ const SHARED_SCHEDULE = {
   ],
   Fri: [
     { start: "09:00", end: "09:55", code: "CH2103", type: "Tutorial", room: "R-305" },
-    { start: "10:00", end: "11:00", code: "CH2104", type: "Lab", room: "Lab4" },
+    { start: "10:00", end: "12:00", code: "CH2104", type: "Lab", room: "Lab4" },
     { start: "12:00", end: "12:55", code: "CH2102", type: "Theory", room: "R-306" },
     { start: "15:00", end: "15:55", code: "CH2104", type: "Theory", room: "R-102" },
     { start: "16:00", end: "16:55", code: "CH2103", type: "Theory", room: "R-305" },
