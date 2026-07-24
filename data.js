@@ -1,3 +1,36 @@
+/**
+ * data.js
+ * ------------------------------------------------------------------
+ * Real data: all 41 CST students (from CST_ATTENDANCE_SHEET.xlsx),
+ * each currently mapped to the same chemistry timetable (confirmed by
+ * the user — every student has the identical Chem-sheet schedule).
+ *
+ * Shape expected by app.js:
+ *
+ * TIMETABLE_DATA = {
+ *   meta: { department, term },
+ *   days: ["Mon","Tue","Wed","Thu","Fri"],
+ *   students: [ { id, name, roll } ],
+ *   schedules: {
+ *     "<student id>": {
+ *       "Mon": [ { start, end, code, type, room }, ... ],
+ *       ...
+ *     }
+ *   }
+ * }
+ *
+ * start/end are 24h "HH:MM" strings. type is "Theory" | "Lab" | "Tutorial".
+ *
+ * WHEN A NON-SHARED (PER-STUDENT) TIMETABLE ARRIVES:
+ * Just give each student their own entry in `schedules` instead of
+ * pointing them all at SHARED_SCHEDULE below.
+ *
+ * WHEN A REAL BACKEND ARRIVES:
+ * Point app.js's loadTimetable() at a real endpoint returning JSON in
+ * this same shape instead of reading this file.
+ * ------------------------------------------------------------------
+ */
+
 const SHARED_SCHEDULE = {
   Mon: [
     { start: "16:00", end: "16:55", code: "CH2104", type: "Theory", room: "R-102" },
@@ -22,7 +55,7 @@ const SHARED_SCHEDULE = {
   ],
   Fri: [
     { start: "09:00", end: "09:55", code: "CH2103", type: "Tutorial", room: "R-305" },
-    { start: "10:00", end: "12:00", code: "CH2104", type: "Lab", room: "Lab4" },
+    { start: "10:00", end: "11:00", code: "CH2104", type: "Lab", room: "Lab4" },
     { start: "12:00", end: "12:55", code: "CH2102", type: "Theory", room: "R-306" },
     { start: "15:00", end: "15:55", code: "CH2104", type: "Theory", room: "R-102" },
     { start: "16:00", end: "16:55", code: "CH2103", type: "Theory", room: "R-305" },

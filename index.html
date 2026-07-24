@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student Timetable Finder — IIT Patna</title>
 <meta name="description" content="Look up your personal weekly class timetable — IIT Patna CST.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" type="image/svg+xml"
       href="data:image/svg+xml,
       <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
@@ -14,21 +15,20 @@
               font-size='64'
               fill='%23d4af37'
               font-family='Arial'
-              font-weight='700'>π</text>
+              font-weight='700'>θ</text>
       </svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
- 
+
 <header class="topbar">
   <div class="topbar__inner">
     <button class="icon-btn" id="menuBtn" aria-haspopup="true" aria-expanded="false" aria-label="Settings">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2 5H18M2 10H18M2 15H18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     </button>
- 
+
     <div class="settings-panel" id="settingsPanel" hidden>
       <button class="settings-panel__item" id="resetBtn" type="button">Reset</button>
       <div class="settings-panel__item settings-panel__item--row">
@@ -40,14 +40,14 @@
     </div>
   </div>
 </header>
- 
+
 <main class="page">
- 
+
   <div class="hero">
     <h1 class="hero__title">Student Timetable Finder</h1>
     <span class="hero__eyebrow">IIT PATNA</span>
   </div>
- 
+
   <div class="search-block">
     <div class="search-field">
       <input
@@ -63,25 +63,24 @@
       >
       <ul class="suggest-list" id="suggestList" hidden></ul>
     </div>
- 
+
     <button class="btn-save" id="saveMeBtn" type="button">Save as me</button>
   </div>
- 
+
   <p class="hint" id="hint">Type your name to find your timetable.</p>
- 
+
   <section class="student-card" id="studentCard" hidden>
     <h2 class="student-card__name" id="studentName"></h2>
     <p class="student-card__meta" id="studentMeta"></p>
   </section>
- 
+
   <section class="agenda" id="agenda" hidden></section>
- 
+
 </main>
+
 <footer>Pasted with 💙 by Satyam</footer>
- 
+
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
- 
-

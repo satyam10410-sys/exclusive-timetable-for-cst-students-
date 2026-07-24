@@ -41,7 +41,7 @@ async function init() {
   }
 
   window.setInterval(() => {
-    if (state.selectedId) renderAgenda(state.selectedId);
+    if (state.selectedId) refreshNowState();
   }, 60 * 1000);
 }
 
@@ -231,11 +231,11 @@ function renderAgenda(studentId) {
       : entries.map(cls => {
           const isNow = isToday && nowMin >= toMinutes(cls.start) && nowMin < toMinutes(cls.end);
           return `
-            <div class="class-row ${isNow ? 'is-now' : ''}">
+            <div class="class-row ${isNow ? 'is-now' : ''}" data-day="${day}" data-start="${cls.start}" data-end="${cls.end}">
               <div class="class-row__time">${formatTimeRange(cls.start, cls.end)}</div>
               <div class="class-row__main">
                 <span class="class-row__code">${escapeHtml(cls.code)}</span><span class="class-row__type">${escapeHtml(cls.type)}</span>
-                ${isNow ? '<span class="class-row__now-tag">Now</span>' : ''}
+                <span class="class-row__now-tag" ${isNow ? '' : 'hidden'}>Now</span>
               </div>
               <div class="class-row__room">📍 ${escapeHtml(cls.room)}</div>
             </div>`;
@@ -250,6 +250,33 @@ function renderAgenda(studentId) {
         ${rows}
       </div>`;
   }).join('');
+}
+
+// Called every minute. Toggles is-now state on existing rows instead of
+// rebuilding the agenda, so CSS entrance animations only play once.
+function refreshNowState() {
+  const today = getTodayShort();
+  const nowMin = getNowMinutes();
+
+  document.querySelectorAll('.class-row').forEach(row => {
+    const isToday = row.getAttribute('data-day') === today;
+    const start = toMinutes(row.getAttribute('data-start'));
+    const end = toMinutes(row.getAttribute('data-end'));
+    const isNow = isToday && nowMin >= start && nowMin < end;
+
+    row.classList.toggle('is-now', isNow);
+    const tag = row.querySelector('.class-row__now-tag');
+    if (tag) tag.hidden = !isNow;
+  });
+
+  document.querySelectorAll('.day-card').forEach(card => {
+    const title = card.querySelector('.day-card__title')?.textContent;
+    const badge = card.querySelector('.day-card__badge');
+    if (!badge || !title) return;
+    const isToday = title === today;
+    badge.textContent = isToday ? 'Today' : 'Weekday';
+    badge.classList.toggle('day-card__badge--today', isToday);
+  });
 }
 
 function escapeHtml(str) {
