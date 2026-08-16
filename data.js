@@ -33,36 +33,34 @@
 
 const SHARED_SCHEDULE = {
   Mon: [
-    { start: "16:00", end: "16:55", code: "CH2104", type: "Theory", room: "R-102" },
-    { start: "17:00", end: "17:55", code: "CH2103", type: "Theory", room: "R-306" }
+    { start: "09:00", end: "09:55", code: "CE2103", type: "Theory", room: "R-104" },
+    { start: "11:00", end: "11:55", code: "CE2104", type: "Theory", room: "R-104" },
+    { start: "15:00", end: "15:55", code: "CE2102", type: "Theory", room: "R-102" },
+    { start: "16:00", end: "17:55", code: "CE2103", type: "Lab", room: "New Civil Workshop" }
   ],
   Tue: [
-    { start: "10:00", end: "10:55", code: "CH2105", type: "Theory", room: "R-102" },
-    { start: "16:00", end: "16:55", code: "CH2101", type: "Theory", room: "R-305" }
+    { start: "09:00", end: "09:55", code: "CE2102", type: "Theory", room: "R-102" },
+    { start: "11:00", end: "11:55", code: "CE2103", type: "Theory", room: "R-104" },
+    { start: "12:00", end: "12:55", code: "CE2103", type: "Tutorial", room: "R-104" },
+    { start: "15:00", end: "15:55", code: "CE2101", type: "Theory", room: "R-102" },
+    { start: "16:00", end: "17:55", code: "CE2104", type: "Lab", room: "Civil Dept." }
   ],
   Wed: [
-    { start: "09:00", end: "09:55", code: "CH2101", type: "Tutorial", room: "R-306" },
-    { start: "10:00", end: "10:55", code: "CH2101", type: "Theory", room: "R-306" },
-    { start: "11:00", end: "11:55", code: "CH2102", type: "Theory", room: "R-306" },
-    { start: "15:00", end: "15:55", code: "CH2104", type: "Theory", room: "R-102" },
-    { start: "17:00", end: "17:55", code: "CH2105", type: "Theory", room: "R-102" }
+    { start: "09:00", end: "09:55", code: "CE2103", type: "Theory", room: "R-104" },
+    { start: "10:00", end: "10:55", code: "CE2101", type: "Theory", room: "LT-002" },
+    { start: "11:00", end: "11:55", code: "CE2104", type: "Theory", room: "R-104" }
   ],
   Thu: [
-    { start: "10:00", end: "10:55", code: "CH2102", type: "Tutorial", room: "R-306" },
-    { start: "11:00", end: "11:55", code: "CH2102", type: "Theory", room: "R-306" },
-    { start: "15:00", end: "15:55", code: "CH2105", type: "Theory", room: "R-102" },
-    { start: "17:00", end: "17:55", code: "CH2103", type: "Theory", room: "R-305" }
+    { start: "09:00", end: "09:55", code: "CE2102", type: "Theory", room: "R-104" },
+    { start: "10:00", end: "10:55", code: "CE2102", type: "Tutorial", room: "R-104" },
+    { start: "11:00", end: "11:55", code: "CE2101", type: "Theory", room: "R-104" }
   ],
   Fri: [
-    { start: "09:00", end: "09:55", code: "CH2103", type: "Tutorial", room: "R-305" },
-    { start: "10:00", end: "12:00", code: "CH2104", type: "Lab", room: "Lab4" },
-    { start: "12:00", end: "12:55", code: "CH2102", type: "Theory", room: "R-306" },
-    { start: "15:00", end: "15:55", code: "CH2104", type: "Theory", room: "R-102" },
-    { start: "16:00", end: "16:55", code: "CH2103", type: "Theory", room: "R-305" },
-    { start: "17:00", end: "17:55", code: "CH2101", type: "Theory", room: "R-305" }
+    { start: "08:00", end: "10:55", code: "CE2101", type: "Lab", room: "Civil dept." },
+    { start: "12:00", end: "12:55", code: "CE2104", type: "Theory", room: "104" }
   ]
 };
-
+/*
 const STUDENTS = [
   { id: "s-2501ct01", name: "Rishikesh Yadav", roll: "2501CT01" },
   { id: "s-2501ct02", name: "Ankit Singh", roll: "2501CT02" },
@@ -105,7 +103,7 @@ const STUDENTS = [
   { id: "s-2503ct01", name: "Esha Dildeep", roll: "2503CT01" },
   { id: "s-2503ct02", name: "Ved Pal", roll: "2503CT02" },
   { id: "s-2503ct03", name: "Rishu Kumar", roll: "2503CT03" },
-];
+];*/
 
 const SCHEDULES = {};
 STUDENTS.forEach(s => { SCHEDULES[s.id] = SHARED_SCHEDULE; });
