@@ -1,45 +1,24 @@
 /**
- * app.js — Student Timetable Finder
- * ------------------------------------------------------------------
- * Storage keys:
- *   ttv:theme  -> "dark" | "light"   set by the theme toggle
- * ------------------------------------------------------------------
+ * app.js
  */
 
-const STORAGE_KEYS = {
-  theme: 'ttv:theme'
-};
-
-const state = {
-  data: null
-};
-
-// ---------------------------------------------------------------
-// Boot
-// ---------------------------------------------------------------
+const STORAGE_KEYS = { theme: 'ttv:theme' };
+const state = { data: null };
 
 async function loadTimetable() {
-  // Pulls from the TIMETABLE_DATA defined in data.js
   return window.TIMETABLE_DATA;
 }
 
 async function init() {
   applyStoredTheme();
   state.data = await loadTimetable();
-
   bindEvents();
-
-  // Directly render the timetable without needing a student ID
   renderAgenda();
 
   window.setInterval(() => {
     refreshNowState();
   }, 60 * 1000);
 }
-
-// ---------------------------------------------------------------
-// Theme
-// ---------------------------------------------------------------
 
 function applyStoredTheme() {
   const stored = window.localStorage.getItem(STORAGE_KEYS.theme);
@@ -56,21 +35,14 @@ function toggleTheme() {
   document.getElementById('themeToggle').setAttribute('aria-pressed', String(next === 'dark'));
 }
 
-// ---------------------------------------------------------------
-// Time helpers
-// ---------------------------------------------------------------
-
 function getTodayShort() {
   const map = { Mon: 'Mon', Tue: 'Tue', Wed: 'Wed', Thu: 'Thu', Fri: 'Fri', Sat: 'Sat', Sun: 'Sun' };
-  const weekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', weekday: 'short' })
-    .format(new Date());
+  const weekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', weekday: 'short' }).format(new Date());
   return map[weekday] || weekday;
 }
 
 function getNowMinutes() {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false
-  }).formatToParts(new Date());
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
   const h = Number(parts.find(p => p.type === 'hour').value);
   const m = Number(parts.find(p => p.type === 'minute').value);
   return h * 60 + m;
@@ -93,20 +65,13 @@ function format12h(hhmm) {
   return m === 0 ? `${hour12} ${period}` : `${hour12}:${String(m).padStart(2, '0')} ${period}`;
 }
 
-// ---------------------------------------------------------------
-// Rendering the agenda
-// ---------------------------------------------------------------
-
 function renderAgenda() {
   const agenda = document.getElementById('agenda');
-  // Access the schedule directly from our updated data structure
-  if (!agenda) {
-    console.error("Could not find <div id='agenda'></div> in the HTML!");
-    return;
-  }
+  if (!agenda) return;
 
   agenda.hidden = false;
   agenda.style.display = 'block';
+
   const schedule = state.data.schedule || {};
   const days = state.data.days || ["Mon", "Tue", "Wed", "Thu", "Fri"];
   const today = getTodayShort();
@@ -142,7 +107,6 @@ function renderAgenda() {
   }).join('');
 }
 
-// Called every minute to toggle the "Now" state without rebuilding the DOM.
 function refreshNowState() {
   const today = getTodayShort();
   const nowMin = getNowMinutes();
@@ -174,10 +138,6 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ---------------------------------------------------------------
-// Events
-// ---------------------------------------------------------------
-
 function bindEvents() {
   document.getElementById('menuBtn').addEventListener('click', () => {
     const panel = document.getElementById('settingsPanel');
@@ -196,252 +156,8 @@ function bindEvents() {
     }
   });
 
-  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-}
-
-document.addEventListener('DOMContentLoaded', init);
-  const theme = stored === 'light' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('themeToggle')?.setAttribute('aria-pressed', String(theme === 'dark'));
-}
-
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-  const next = current === 'light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', next);
-  window.localStorage.setItem(STORAGE_KEYS.theme, next);
-  document.getElementById('themeToggle').setAttribute('aria-pressed', String(next === 'dark'));
-}
-
-  document.getElementById('studentCard').hidden = false;
-  document.getElementById('studentName').textContent = student.name;
-  document.getElementById('studentMeta').textContent = `Roll: ${student.roll}`;
-
-  document.getElementById('agenda').hidden = false;
-  renderAgenda(id);
-
-  const hint = document.getElementById('hint');
-  const saved = window.localStorage.getItem(STORAGE_KEYS.me);
-  if (opts.fromSaved || saved === id) {
-    hint.textContent = 'Showing your saved timetable.';
-    hint.classList.add('hint--confirm');
-  } else {
-    hint.textContent = 'Found it — tap "Save as me" to load this automatically next time.';
-    hint.classList.remove('hint--confirm');
-  }
-}
-
-// ---------------------------------------------------------------
-// Save as me / Reset
-// ---------------------------------------------------------------
-
-function saveAsMe() {
-  if (!state.selectedId) return;
-  window.localStorage.setItem(STORAGE_KEYS.me, state.selectedId);
-  const hint = document.getElementById('hint');
-  hint.textContent = 'Saved — this will load automatically next time you visit.';
-  hint.classList.add('hint--confirm');
-}
-
-function resetAll() {
-  window.localStorage.removeItem(STORAGE_KEYS.me);
-  window.localStorage.removeItem(STORAGE_KEYS.theme);
-
-  state.selectedId = null;
-
-  document.getElementById('searchInput').value = '';
-  document.getElementById('studentCard').hidden = true;
-  document.getElementById('agenda').hidden = true;
-  closeSuggestions();
-
-  const hint = document.getElementById('hint');
-  hint.textContent = 'Type your name to find your timetable.';
-  hint.classList.remove('hint--confirm');
-
-  document.documentElement.setAttribute('data-theme', 'dark');
-  document.getElementById('themeToggle').setAttribute('aria-pressed', 'true');
-
-  document.getElementById('settingsPanel').hidden = true;
-  document.getElementById('menuBtn').setAttribute('aria-expanded', 'false');
-}
-
-// ---------------------------------------------------------------
-// Time helpers
-// ---------------------------------------------------------------
-
-function getTodayShort() {
-  const map = { Mon: 'Mon', Tue: 'Tue', Wed: 'Wed', Thu: 'Thu', Fri: 'Fri', Sat: 'Sat', Sun: 'Sun' };
-  const weekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', weekday: 'short' })
-    .format(new Date());
-  return map[weekday] || weekday;
-}
-
-function getNowMinutes() {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false
-  }).formatToParts(new Date());
-  const h = Number(parts.find(p => p.type === 'hour').value);
-  const m = Number(parts.find(p => p.type === 'minute').value);
-  return h * 60 + m;
-}
-
-function toMinutes(hhmm) {
-  const [h, m] = hhmm.split(':').map(Number);
-  return h * 60 + m;
-}
-
-function formatTimeRange(start, end) {
-  return `${format12h(start)} – ${format12h(end)}`;
-}
-
-function format12h(hhmm) {
-  const [h, m] = hhmm.split(':').map(Number);
-  const period = h >= 12 ? 'PM' : 'AM';
-  let hour12 = h % 12;
-  if (hour12 === 0) hour12 = 12;
-  return m === 0 ? `${hour12} ${period}` : `${hour12}:${String(m).padStart(2, '0')} ${period}`;
-}
-
-// ---------------------------------------------------------------
-// Rendering the agenda
-// ---------------------------------------------------------------
-
-function renderAgenda(studentId) {
-  const agenda = document.getElementById('agenda');
-  const schedule = state.data.schedules[studentId] || {};
-  const today = getTodayShort();
-  const nowMin = getNowMinutes();
-
-  agenda.innerHTML = state.data.days.map(day => {
-    const entries = (schedule[day] || []).slice().sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
-    const isToday = day === today;
-
-    const rows = entries.length === 0
-      ? '<div class="day-card__empty">No classes scheduled.</div>'
-      : entries.map(cls => {
-          const isNow = isToday && nowMin >= toMinutes(cls.start) && nowMin < toMinutes(cls.end);
-          return `
-            <div class="class-row ${isNow ? 'is-now' : ''}" data-day="${day}" data-start="${cls.start}" data-end="${cls.end}">
-              <div class="class-row__time">${formatTimeRange(cls.start, cls.end)}</div>
-              <div class="class-row__main">
-                <span class="class-row__code">${escapeHtml(cls.code)}</span><span class="class-row__type">${escapeHtml(cls.type)}</span>
-                <span class="class-row__now-tag" ${isNow ? '' : 'hidden'}>Now</span>
-              </div>
-              <div class="class-row__room">📍 ${escapeHtml(cls.room)}</div>
-            </div>`;
-        }).join('');
-
-    return `
-      <div class="day-card">
-        <div class="day-card__header">
-          <h3 class="day-card__title">${day}</h3>
-          <span class="day-card__badge ${isToday ? 'day-card__badge--today' : ''}">${isToday ? 'Today' : 'Weekday'}</span>
-        </div>
-        ${rows}
-      </div>`;
-  }).join('');
-}
-
-// Called every minute. Toggles is-now state on existing rows instead of
-// rebuilding the agenda, so CSS entrance animations only play once.
-function refreshNowState() {
-  const today = getTodayShort();
-  const nowMin = getNowMinutes();
-
-  document.querySelectorAll('.class-row').forEach(row => {
-    const isToday = row.getAttribute('data-day') === today;
-    const start = toMinutes(row.getAttribute('data-start'));
-    const end = toMinutes(row.getAttribute('data-end'));
-    const isNow = isToday && nowMin >= start && nowMin < end;
-
-    row.classList.toggle('is-now', isNow);
-    const tag = row.querySelector('.class-row__now-tag');
-    if (tag) tag.hidden = !isNow;
-  });
-
-  document.querySelectorAll('.day-card').forEach(card => {
-    const title = card.querySelector('.day-card__title')?.textContent;
-    const badge = card.querySelector('.day-card__badge');
-    if (!badge || !title) return;
-    const isToday = title === today;
-    badge.textContent = isToday ? 'Today' : 'Weekday';
-    badge.classList.toggle('day-card__badge--today', isToday);
-  });
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str ?? '';
-  return div.innerHTML;
-}
-
-// ---------------------------------------------------------------
-// Events
-// ---------------------------------------------------------------
-
-function bindEvents() {
-  const input = document.getElementById('searchInput');
-
-  input.addEventListener('input', () => {
-    renderSuggestions(matchStudents(input.value));
-  });
-
-  input.addEventListener('keydown', (e) => {
-    const items = document.querySelectorAll('.suggest-item');
-    if (items.length === 0) return;
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      state.activeSuggestionIndex = Math.min(state.activeSuggestionIndex + 1, items.length - 1);
-      updateActiveSuggestion(items);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      state.activeSuggestionIndex = Math.max(state.activeSuggestionIndex - 1, 0);
-      updateActiveSuggestion(items);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      const active = state.currentMatches[state.activeSuggestionIndex] || state.currentMatches[0];
-      if (active) selectStudent(active.id);
-    } else if (e.key === 'Escape') {
-      closeSuggestions();
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    const field = document.querySelector('.search-field');
-    if (!field.contains(e.target)) closeSuggestions();
-  });
-
-  document.getElementById('saveMeBtn').addEventListener('click', saveAsMe);
-
-  document.getElementById('menuBtn').addEventListener('click', () => {
-    const panel = document.getElementById('settingsPanel');
-    const btn = document.getElementById('menuBtn');
-    const isHidden = panel.hidden;
-    panel.hidden = !isHidden;
-    btn.setAttribute('aria-expanded', String(isHidden));
-  });
-
-  document.addEventListener('click', (e) => {
-    const panel = document.getElementById('settingsPanel');
-    const btn = document.getElementById('menuBtn');
-    if (!panel.hidden && !panel.contains(e.target) && !btn.contains(e.target)) {
-      panel.hidden = true;
-      btn.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  document.getElementById('resetBtn').addEventListener('click', resetAll);
-  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-}
-
-function updateActiveSuggestion(items) {
-  items.forEach(item => item.classList.remove('is-active'));
-  const active = items[state.activeSuggestionIndex];
-  if (active) {
-    active.classList.add('is-active');
-    active.scrollIntoView({ block: 'nearest' });
-  }
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
 }
 
 document.addEventListener('DOMContentLoaded', init);
