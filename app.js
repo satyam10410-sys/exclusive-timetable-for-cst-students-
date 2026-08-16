@@ -20,7 +20,7 @@ const state = {
 
 async function loadTimetable() {
   // Pulls from the TIMETABLE_DATA defined in data.js
-  return TIMETABLE_DATA;
+  return window.TIMETABLE_DATA;
 }
 
 async function init() {
@@ -100,6 +100,13 @@ function format12h(hhmm) {
 function renderAgenda() {
   const agenda = document.getElementById('agenda');
   // Access the schedule directly from our updated data structure
+  if (!agenda) {
+    console.error("Could not find <div id='agenda'></div> in the HTML!");
+    return;
+  }
+
+  agenda.hidden = false;
+  agenda.style.display = 'block';
   const schedule = state.data.schedule || {};
   const days = state.data.days || ["Mon", "Tue", "Wed", "Thu", "Fri"];
   const today = getTodayShort();
