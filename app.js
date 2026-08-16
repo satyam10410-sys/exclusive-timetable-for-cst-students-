@@ -2,21 +2,16 @@
  * app.js — Student Timetable Finder
  * ------------------------------------------------------------------
  * Storage keys:
- *   ttv:me     -> studentId string   set by "Save as me"
  *   ttv:theme  -> "dark" | "light"   set by the theme toggle
  * ------------------------------------------------------------------
  */
 
 const STORAGE_KEYS = {
-  me: 'ttv:me',
   theme: 'ttv:theme'
 };
 
 const state = {
-  data: null,
-  selectedId: null,
-  activeSuggestionIndex: -1,
-  currentMatches: []
+  data: null
 };
 
 // ---------------------------------------------------------------
@@ -24,8 +19,7 @@ const state = {
 // ---------------------------------------------------------------
 
 async function loadTimetable() {
-  // Swap this for `await (await fetch('/api/timetable')).json();`
-  // once the real backend/database is connected.
+  // Pulls from the TIMETABLE_DATA defined in data.js
   return TIMETABLE_DATA;
 }
 
@@ -35,13 +29,11 @@ async function init() {
 
   bindEvents();
 
-  const savedId = window.localStorage.getItem(STORAGE_KEYS.me);
-  if (savedId && state.data.students.some(s => s.id === savedId)) {
-    selectStudent(savedId, { fromSaved: true });
-  }
+  // Directly render the timetable without needing a student ID
+  renderAgenda();
 
   window.setInterval(() => {
-    if (state.selectedId) refreshNowState();
+    refreshNowState();
   }, 60 * 1000);
 }
 
@@ -65,63 +57,154 @@ function toggleTheme() {
 }
 
 // ---------------------------------------------------------------
-// Search / suggestions
+// Time helpers
 // ---------------------------------------------------------------
 
-function matchStudents(query) {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  return state.data.students.filter(s =>
-    s.name.toLowerCase().includes(q) || s.roll.toLowerCase().includes(q)
-  );
+function getTodayShort() {
+  const map = { Mon: 'Mon', Tue: 'Tue', Wed: 'Wed', Thu: 'Thu', Fri: 'Fri', Sat: 'Sat', Sun: 'Sun' };
+  const weekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', weekday: 'short' })
+    .format(new Date());
+  return map[weekday] || weekday;
 }
 
-function renderSuggestions(matches) {
-  const list = document.getElementById('suggestList');
-  const input = document.getElementById('searchInput');
-  state.currentMatches = matches;
-  state.activeSuggestionIndex = -1;
+function getNowMinutes() {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false
+  }).formatToParts(new Date());
+  const h = Number(parts.find(p => p.type === 'hour').value);
+  const m = Number(parts.find(p => p.type === 'minute').value);
+  return h * 60 + m;
+}
 
-  if (matches.length === 0) {
-    list.hidden = true;
-    list.innerHTML = '';
-    input.setAttribute('aria-expanded', 'false');
-    return;
-  }
+function toMinutes(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
 
-  list.innerHTML = matches.map((s, i) => `
-    <li class="suggest-item" data-id="${s.id}" data-index="${i}" role="option">
-      <span class="suggest-item__name">${escapeHtml(s.name)}</span>
-      <span class="suggest-item__meta">${escapeHtml(s.roll)}</span>
-    </li>
-  `).join('');
-  list.hidden = false;
-  input.setAttribute('aria-expanded', 'true');
+function formatTimeRange(start, end) {
+  return `${format12h(start)} – ${format12h(end)}`;
+}
 
-  list.querySelectorAll('.suggest-item').forEach(item => {
-    item.addEventListener('click', () => {
-      selectStudent(item.getAttribute('data-id'));
-    });
+function format12h(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  let hour12 = h % 12;
+  if (hour12 === 0) hour12 = 12;
+  return m === 0 ? `${hour12} ${period}` : `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+// ---------------------------------------------------------------
+// Rendering the agenda
+// ---------------------------------------------------------------
+
+function renderAgenda() {
+  const agenda = document.getElementById('agenda');
+  // Access the schedule directly from our updated data structure
+  const schedule = state.data.schedule || {};
+  const days = state.data.days || ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  const today = getTodayShort();
+  const nowMin = getNowMinutes();
+
+  agenda.innerHTML = days.map(day => {
+    const entries = (schedule[day] || []).slice().sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+    const isToday = day === today;
+
+    const rows = entries.length === 0
+      ? '<div class="day-card__empty">No classes scheduled.</div>'
+      : entries.map(cls => {
+          const isNow = isToday && nowMin >= toMinutes(cls.start) && nowMin < toMinutes(cls.end);
+          return `
+            <div class="class-row ${isNow ? 'is-now' : ''}" data-day="${day}" data-start="${cls.start}" data-end="${cls.end}">
+              <div class="class-row__time">${formatTimeRange(cls.start, cls.end)}</div>
+              <div class="class-row__main">
+                <span class="class-row__code">${escapeHtml(cls.code)}</span><span class="class-row__type">${escapeHtml(cls.type)}</span>
+                <span class="class-row__now-tag" ${isNow ? '' : 'hidden'}>Now</span>
+              </div>
+              <div class="class-row__room">📍 ${escapeHtml(cls.room)}</div>
+            </div>`;
+        }).join('');
+
+    return `
+      <div class="day-card">
+        <div class="day-card__header">
+          <h3 class="day-card__title">${day}</h3>
+          <span class="day-card__badge ${isToday ? 'day-card__badge--today' : ''}">${isToday ? 'Today' : 'Weekday'}</span>
+        </div>
+        ${rows}
+      </div>`;
+  }).join('');
+}
+
+// Called every minute to toggle the "Now" state without rebuilding the DOM.
+function refreshNowState() {
+  const today = getTodayShort();
+  const nowMin = getNowMinutes();
+
+  document.querySelectorAll('.class-row').forEach(row => {
+    const isToday = row.getAttribute('data-day') === today;
+    const start = toMinutes(row.getAttribute('data-start'));
+    const end = toMinutes(row.getAttribute('data-end'));
+    const isNow = isToday && nowMin >= start && nowMin < end;
+
+    row.classList.toggle('is-now', isNow);
+    const tag = row.querySelector('.class-row__now-tag');
+    if (tag) tag.hidden = !isNow;
+  });
+
+  document.querySelectorAll('.day-card').forEach(card => {
+    const title = card.querySelector('.day-card__title')?.textContent;
+    const badge = card.querySelector('.day-card__badge');
+    if (!badge || !title) return;
+    const isToday = title === today;
+    badge.textContent = isToday ? 'Today' : 'Weekday';
+    badge.classList.toggle('day-card__badge--today', isToday);
   });
 }
 
-function closeSuggestions() {
-  const list = document.getElementById('suggestList');
-  list.hidden = true;
-  document.getElementById('searchInput').setAttribute('aria-expanded', 'false');
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
 }
 
 // ---------------------------------------------------------------
-// Selecting a student
+// Events
 // ---------------------------------------------------------------
 
-function selectStudent(id, opts = {}) {
-  const student = state.data.students.find(s => s.id === id);
-  if (!student) return;
+function bindEvents() {
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    const panel = document.getElementById('settingsPanel');
+    const btn = document.getElementById('menuBtn');
+    const isHidden = panel.hidden;
+    panel.hidden = !isHidden;
+    btn.setAttribute('aria-expanded', String(isHidden));
+  });
 
-  state.selectedId = id;
-  document.getElementById('searchInput').value = student.name;
-  closeSuggestions();
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('settingsPanel');
+    const btn = document.getElementById('menuBtn');
+    if (!panel.hidden && !panel.contains(e.target) && !btn.contains(e.target)) {
+      panel.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+  const theme = stored === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggle')?.setAttribute('aria-pressed', String(theme === 'dark'));
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  window.localStorage.setItem(STORAGE_KEYS.theme, next);
+  document.getElementById('themeToggle').setAttribute('aria-pressed', String(next === 'dark'));
+}
 
   document.getElementById('studentCard').hidden = false;
   document.getElementById('studentName').textContent = student.name;
