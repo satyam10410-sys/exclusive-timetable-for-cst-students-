@@ -35,7 +35,7 @@ const SHARED_SCHEDULE = {
   ]
 };
 
-const TIMETABLE_DATA = {
+window.TIMETABLE_DATA = {
   meta: {
     department: "CEE",
     term: "IIT Patna"
